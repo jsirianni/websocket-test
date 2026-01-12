@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	_ "time/tzdata"
 
+	"github.com/jsirianni/websocket-test/internal/logger"
 	"github.com/jsirianni/websocket-test/server"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -19,6 +20,9 @@ func main() {
 	port := flag.Int("port", 3003, "Port for the WebSocket server")
 	metricsPort := flag.Int("metrics-port", 9100, "Port for the Prometheus metrics endpoint")
 	flag.Parse()
+
+	log := logger.MustNew()
+	defer log.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -28,7 +32,7 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigChan
-		log.Println("Received shutdown signal")
+		log.Info("Received shutdown signal")
 		cancel()
 	}()
 
@@ -37,14 +41,14 @@ func main() {
 
 	// Start metrics server
 	go func() {
-		if err := server.StartMetricsServer(ctx, *metricsPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Printf("Metrics server error: %v", err)
+		if err := server.StartMetricsServer(ctx, *metricsPort, log); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("Metrics server error", zap.Error(err))
 		}
 	}()
 
 	// Start WebSocket server
-	srv := server.New(*host, *port, metrics)
+	srv := server.New(*host, *port, metrics, log)
 	if err := srv.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Server error: %v", err)
+		log.Fatal("Server error", zap.Error(err))
 	}
 }

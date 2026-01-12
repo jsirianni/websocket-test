@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,6 +10,8 @@ import (
 	_ "time/tzdata"
 
 	"github.com/jsirianni/websocket-test/client"
+	"github.com/jsirianni/websocket-test/internal/logger"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -23,6 +24,9 @@ func main() {
 		*connections = 1
 	}
 
+	log := logger.MustNew()
+	defer log.Sync()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -31,7 +35,7 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigChan
-		log.Println("Received shutdown signal")
+		log.Info("Received shutdown signal")
 		cancel()
 	}()
 
@@ -43,7 +47,7 @@ func main() {
 		wg.Add(1)
 		go func(connID int) {
 			defer wg.Done()
-			c := client.New(*host, *port)
+			c := client.New(*host, *port, log)
 			if err := c.Start(ctx); err != nil && err != context.Canceled {
 				errChan <- err
 			}
@@ -60,7 +64,7 @@ func main() {
 	// Return first error or wait for context cancellation
 	select {
 	case err := <-errChan:
-		log.Fatalf("Client error: %v", err)
+		log.Fatal("Client error", zap.Error(err))
 	case <-ctx.Done():
 		<-done
 	case <-done:
