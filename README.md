@@ -75,6 +75,7 @@ For detailed setup instructions, see the [Quick Start Guide](docs/quickstart.md)
 |------|---------|-------------|
 | `--host` | `localhost` | Server hostname |
 | `--port` | `3003` | Server port |
+| `--connections` | `1` | Number of concurrent connections |
 
 ## Documentation
 

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	_ "time/tzdata"
 
@@ -15,7 +16,12 @@ import (
 func main() {
 	host := flag.String("host", "localhost", "WebSocket server host")
 	port := flag.Int("port", 3003, "WebSocket server port")
+	connections := flag.Int("connections", 1, "Number of concurrent connections")
 	flag.Parse()
+
+	if *connections < 1 {
+		*connections = 1
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -29,9 +35,34 @@ func main() {
 		cancel()
 	}()
 
-	// Start client
-	c := client.New(*host, *port)
-	if err := c.Start(ctx); err != nil && err != context.Canceled {
+	// Start multiple client instances if needed
+	var wg sync.WaitGroup
+	errChan := make(chan error, *connections)
+
+	for i := 0; i < *connections; i++ {
+		wg.Add(1)
+		go func(connID int) {
+			defer wg.Done()
+			c := client.New(*host, *port)
+			if err := c.Start(ctx); err != nil && err != context.Canceled {
+				errChan <- err
+			}
+		}(i + 1)
+	}
+
+	// Wait for all connections to finish
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	// Return first error or wait for context cancellation
+	select {
+	case err := <-errChan:
 		log.Fatalf("Client error: %v", err)
+	case <-ctx.Done():
+		<-done
+	case <-done:
 	}
 }

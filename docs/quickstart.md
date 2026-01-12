@@ -250,6 +250,13 @@ kubectl delete -f k8s/
 ./bin/client --host=example.com --port=8080
 ```
 
+### Load Testing with Multiple Connections
+
+```bash
+# Connect with 10 concurrent connections from a single client instance
+./bin/client --connections=10
+```
+
 ### Docker with Custom Configuration
 
 ```bash

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,14 +37,14 @@ func main() {
 
 	// Start metrics server
 	go func() {
-		if err := server.StartMetricsServer(ctx, *metricsPort); err != nil {
+		if err := server.StartMetricsServer(ctx, *metricsPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("Metrics server error: %v", err)
 		}
 	}()
 
 	// Start WebSocket server
 	srv := server.New(*host, *port, metrics)
-	if err := srv.Start(ctx); err != nil {
+	if err := srv.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server error: %v", err)
 	}
 }
