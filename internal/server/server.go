@@ -40,6 +40,7 @@ func New(host string, port int, metrics *Metrics, logger *zap.Logger) *Server {
 
 // Start starts the WebSocket server
 func (s *Server) Start(ctx context.Context) error {
+	http.HandleFunc("/", s.handleRoot)
 	http.HandleFunc("/ws", s.handleWebSocket)
 
 	// Start periodic connection logging
@@ -63,6 +64,14 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 
 	return server.ListenAndServe()
+}
+
+func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
