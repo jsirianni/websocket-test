@@ -250,11 +250,20 @@ kubectl delete -f k8s/
 ./bin/client --host=example.com --port=8080
 ```
 
+### Connect with TLS
+
+```bash
+./bin/client --host=example.com --port=443 --tls
+```
+
 ### Load Testing with Multiple Connections
 
 ```bash
 # Connect with 10 concurrent connections from a single client instance
 ./bin/client --connections=10
+
+# Load testing with TLS
+./bin/client --host=example.com --port=443 --tls --connections=100
 ```
 
 ### Docker with Custom Configuration

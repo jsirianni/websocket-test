@@ -18,6 +18,7 @@ func main() {
 	host := flag.String("host", "localhost", "WebSocket server host")
 	port := flag.Int("port", 3003, "WebSocket server port")
 	connections := flag.Int("connections", 1, "Number of concurrent connections")
+	useTLS := flag.Bool("tls", false, "Use TLS (wss scheme) for WebSocket connection")
 	flag.Parse()
 
 	if *connections < 1 {
@@ -47,7 +48,7 @@ func main() {
 		wg.Add(1)
 		go func(connID int) {
 			defer wg.Done()
-			c := client.New(*host, *port, log)
+			c := client.New(*host, *port, *useTLS, log)
 			if err := c.Start(ctx); err != nil && err != context.Canceled {
 				errChan <- err
 			}

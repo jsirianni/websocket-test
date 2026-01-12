@@ -20,6 +20,7 @@ All configuration is done via command-line flags:
 | `--host` | `localhost` | WebSocket server host |
 | `--port` | `3003` | WebSocket server port |
 | `--connections` | `1` | Number of concurrent connections to establish |
+| `--tls` | `false` | Use TLS (wss scheme) for WebSocket connection |
 
 ## Usage
 
@@ -32,6 +33,9 @@ All configuration is done via command-line flags:
 # Connect to custom server
 ./client --host=example.com --port=8080
 
+# Connect with TLS (wss scheme)
+./client --host=example.com --port=443 --tls
+
 # Connect with multiple concurrent connections (for load testing)
 ./client --connections=10
 ```
@@ -43,6 +47,9 @@ docker run ghcr.io/jsirianni/websocket-test-client:latest --host=server --port=3
 
 # With multiple connections for load testing
 docker run ghcr.io/jsirianni/websocket-test-client:latest --host=server --port=3003 --connections=10
+
+# Connect with TLS
+docker run ghcr.io/jsirianni/websocket-test-client:latest --host=example.com --port=443 --tls
 ```
 
 ### Running in Kubernetes

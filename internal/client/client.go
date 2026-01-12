@@ -14,6 +14,7 @@ import (
 type Client struct {
 	host        string
 	port        int
+	useTLS      bool
 	logInterval time.Duration
 
 	handshakeTimeout time.Duration
@@ -23,11 +24,12 @@ type Client struct {
 	logger           *zap.Logger
 }
 
-func New(host string, port int, logger *zap.Logger) *Client {
+func New(host string, port int, useTLS bool, logger *zap.Logger) *Client {
 	pongWait := 60 * time.Second
 	return &Client{
 		host:             host,
 		port:             port,
+		useTLS:           useTLS,
 		logInterval:      30 * time.Second,
 		handshakeTimeout: 10 * time.Second,
 		pongWait:         pongWait,
@@ -42,8 +44,12 @@ func New(host string, port int, logger *zap.Logger) *Client {
 // - the connection fails/closes.
 // No retry logic.
 func (c *Client) Start(ctx context.Context) error {
+	scheme := "ws"
+	if c.useTLS {
+		scheme = "wss"
+	}
 	u := url.URL{
-		Scheme: "ws",
+		Scheme: scheme,
 		Host:   fmt.Sprintf("%s:%d", c.host, c.port),
 		Path:   "/ws",
 	}
