@@ -11,7 +11,7 @@ import (
 	_ "time/tzdata"
 
 	"github.com/jsirianni/websocket-test/internal/logger"
-	"github.com/jsirianni/websocket-test/server"
+	"github.com/jsirianni/websocket-test/internal/server"
 	"go.uber.org/zap"
 )
 

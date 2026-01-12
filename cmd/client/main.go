@@ -9,7 +9,7 @@ import (
 	"syscall"
 	_ "time/tzdata"
 
-	"github.com/jsirianni/websocket-test/client"
+	"github.com/jsirianni/websocket-test/internal/client"
 	"github.com/jsirianni/websocket-test/internal/logger"
 	"go.uber.org/zap"
 )

@@ -43,6 +43,19 @@ builds:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
 
+archives:
+  - id: server-archive
+    builds:
+      - server
+    format: tar.gz
+    name_template: "{{ .ProjectName }}-server_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  
+  - id: client-archive
+    builds:
+      - client
+    format: tar.gz
+    name_template: "{{ .ProjectName }}-client_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
 dockers:
   - image_templates:
       - "ghcr.io/jsirianni/websocket-test-server:{{ .Version }}-amd64"
@@ -56,8 +69,6 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
-    extra_files:
-      - server
     ids:
       - server
     goos: linux
@@ -75,8 +86,6 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
-    extra_files:
-      - server
     ids:
       - server
     goos: linux
@@ -94,8 +103,6 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
-    extra_files:
-      - client
     ids:
       - client
     goos: linux
@@ -113,8 +120,6 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
-    extra_files:
-      - client
     ids:
       - client
     goos: linux

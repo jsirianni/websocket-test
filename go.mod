@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/prometheus/client_golang v1.18.0
+	go.uber.org/zap v1.27.1
 )
 
 require (
@@ -15,7 +16,6 @@ require (
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
