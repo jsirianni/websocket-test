@@ -1,0 +1,9 @@
+FROM ubuntu:latest AS certs
+RUN apt-get update && apt-get install -y ca-certificates
+
+FROM scratch
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY client /client
+
+ENTRYPOINT ["/client"]
+

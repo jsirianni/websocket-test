@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-test-client
+  labels:
+    app: websocket-test-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: websocket-test-client
+  template:
+    metadata:
+      labels:
+        app: websocket-test-client
+    spec:
+      containers:
+      - name: client
+        image: ghcr.io/jsirianni/websocket-test-client:latest
+        args:
+        - "--host=websocket-test-server"
+        - "--port=3003"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 64Mi
+

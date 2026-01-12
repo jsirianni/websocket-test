@@ -1,0 +1,268 @@
+---
+description: Documentation standards and guidelines
+globs: ["**/*.md", "**/README*"]
+alwaysApply: true
+---
+
+# Documentation Standards
+
+## Directory Structure
+
+```
+.
+├── README.md               # Project overview (max 150 lines)
+└── docs/
+    ├── quickstart.md       # Getting started guide
+    ├── server.md           # Server documentation
+    ├── client.md           # Client documentation
+    ├── metrics.md          # Monitoring and metrics
+    ├── development.md      # Developer guide
+    └── architecture.md     # System design
+```
+
+## README.md Requirements
+
+### Structure
+1. Brief project description (2-3 sentences)
+2. Feature list (bullet points)
+3. Quick Start section with 3 subsections:
+   - Build and Run (local)
+   - Using Docker
+   - Using Kubernetes
+4. Configuration tables (one for server, one for client)
+5. Documentation links (with descriptions)
+6. Building section (brief)
+7. License
+
+### Example Structure
+```markdown
+# WebSocket Test
+
+Brief description.
+
+## Features
+- Feature 1
+- Feature 2
+
+## Quick Start
+
+### Build and Run
+```bash
+make build
+./bin/server
+```
+
+### Using Docker
+...
+
+### Using Kubernetes
+...
+
+## Configuration
+
+| Flag | Default | Description |
+|------|---------|-------------|
+
+## Documentation
+
+- **[Quick Start](docs/quickstart.md)** - Description
+- **[Server Docs](docs/server.md)** - Description
+
+## License
+```
+
+### Guidelines
+- Keep it scannable (use bullet points, tables, code blocks)
+- Include links to detailed documentation
+- Show concrete examples, not just descriptions
+- Link to `docs/quickstart.md` for detailed setup
+
+## Component Documentation (server.md, client.md)
+
+### Required Sections
+1. **Overview** - What it does
+2. **Features** - Bullet list of capabilities
+3. **Configuration** - Complete table of all flags
+4. **Usage** - Examples for different scenarios
+5. **Endpoints** (server only) - API/WebSocket/Metrics endpoints
+6. **Logging** - What gets logged and when
+7. **Graceful Shutdown** - How shutdown works
+
+### Configuration Tables
+Always use this format:
+
+```markdown
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--host` | `0.0.0.0` | Host address to bind to |
+| `--port` | `3003` | WebSocket server port |
+```
+
+### Example Code Blocks
+- Always include concrete, runnable examples
+- Show output where relevant
+- Use proper syntax highlighting
+
+```markdown
+```bash
+./server --host=127.0.0.1 --port=8080
+```
+
+Output:
+```
+2026/01/12 10:00:00 Starting WebSocket server on 127.0.0.1:8080
+```
+```
+
+## Quick Start Guide (quickstart.md)
+
+### Structure
+1. Prerequisites
+2. Three main options:
+   - Option 1: Build and Run from Source (step-by-step)
+   - Option 2: Run with Docker (step-by-step)
+   - Option 3: Deploy to Kubernetes (step-by-step)
+3. Configuration Examples
+4. Troubleshooting section
+5. Next Steps (links to other docs)
+
+### Guidelines
+- Number all steps clearly
+- Show expected output after each step
+- Include verification steps
+- Provide troubleshooting for common issues
+- Keep examples copy-pasteable
+
+## Metrics Documentation (metrics.md)
+
+### Required Sections
+1. Metrics Endpoint details
+2. Available Metrics (complete list with types)
+3. Querying Metrics (curl, wget, httpie examples)
+4. Prometheus Configuration (scrape config examples)
+5. Alerting Rules (example rules)
+6. Grafana Dashboard (example queries)
+7. Troubleshooting
+
+### Metric Documentation Format
+```markdown
+### `metric_name`
+
+**Type:** Gauge/Counter/Histogram
+
+**Description:** What it measures
+
+**Labels:** List of labels (or "None")
+
+**Example:**
+```
+# HELP metric_name Description
+# TYPE metric_name gauge
+metric_name{label="value"} 42
+```
+```
+
+## Development Guide (development.md)
+
+### Required Sections
+1. Prerequisites (with versions)
+2. Project Structure (tree view)
+3. Building (all methods)
+4. Testing
+5. Running Locally (step-by-step)
+6. Development Workflow
+7. Releasing
+8. CI/CD explanation
+9. Kubernetes Deployment
+10. Code Organization
+11. Dependencies
+12. GoReleaser Configuration
+13. Troubleshooting
+
+### Guidelines
+- Explain WHY, not just HOW
+- Include actual commands with expected output
+- Document the release process clearly
+- Explain each CI/CD workflow
+- Show how to debug common issues
+
+## Architecture Documentation (architecture.md)
+
+### Required Sections
+1. Overview
+2. Component Architecture (with ASCII diagrams)
+3. Communication Flow (sequence-style diagrams)
+4. Concurrency Model
+5. Metrics explanation
+6. Container Images strategy
+7. Kubernetes Deployment architecture
+8. Error Handling approach
+9. Security Considerations
+10. Performance Characteristics
+11. Build Process
+
+### ASCII Diagrams
+Use box drawing for clarity:
+
+```markdown
+```
+┌─────────────────────────────────────────┐
+│         WebSocket Server                │
+│                                         │
+│  ┌───────────────────────────────────┐ │
+│  │   HTTP Server (Port 3003)         │ │
+│  └───────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
+```
+
+## General Markdown Guidelines
+
+### Formatting
+- Use `code` for inline code, commands, filenames, flags
+- Use **bold** for emphasis on important points
+- Use _italic_ sparingly
+- Use > blockquotes for tips or warnings
+
+### Links
+- Use descriptive link text: `[Quick Start Guide](docs/quickstart.md)`
+- Not: `Click [here](docs/quickstart.md)`
+
+### Code Blocks
+- Always specify language for syntax highlighting
+- Use `bash` for shell commands
+- Use `yaml` for YAML, `dockerfile` for Dockerfiles
+- Use `promql` for Prometheus queries
+
+### Lists
+- Use `-` for unordered lists
+- Use `1.` for ordered lists
+- Maintain consistent indentation
+- Add blank lines between list items if they're long
+
+### Tables
+- Always include headers
+- Align columns for readability in source
+- Keep cell content concise
+
+## Documentation Maintenance
+
+### When Adding Features
+- Update relevant component docs
+- Add to feature list in README
+- Update configuration tables
+- Add examples to quickstart if major feature
+- Update architecture doc if design changes
+
+### When Changing Configuration
+- Update ALL configuration tables
+- Update default values everywhere
+- Update examples that use the changed config
+- Add migration notes if breaking change
+
+### Consistency Checks
+- Port numbers consistent across all docs
+- Default values match code
+- Examples are copy-pasteable
+- Links are not broken
+- Code blocks have proper syntax highlighting

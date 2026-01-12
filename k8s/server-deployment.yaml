@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket-test-server
+  labels:
+    app: websocket-test-server
+spec:
+  type: ClusterIP
+  ports:
+  - name: websocket
+    port: 3003
+    targetPort: 3003
+    protocol: TCP
+  selector:
+    app: websocket-test-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-test-server
+  labels:
+    app: websocket-test-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: websocket-test-server
+  template:
+    metadata:
+      labels:
+        app: websocket-test-server
+    spec:
+      containers:
+      - name: server
+        image: ghcr.io/jsirianni/websocket-test-server:latest
+        ports:
+        - name: websocket
+          containerPort: 3003
+          protocol: TCP
+        - name: metrics
+          containerPort: 9100
+          protocol: TCP
+        args:
+        - "--host=0.0.0.0"
+        - "--port=3003"
+        - "--metrics-port=9100"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9100
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9100
+          initialDelaySeconds: 5
+          periodSeconds: 10
+

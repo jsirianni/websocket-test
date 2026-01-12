@@ -1,0 +1,184 @@
+---
+description: Go language style and best practices
+globs: ["**/*.go"]
+alwaysApply: true
+---
+
+# Go Style Guide
+
+## General Principles
+
+- Follow [Effective Go](https://go.dev/doc/effective_go)
+- Use `gofmt` for formatting (already enforced)
+- Run `go vet` before committing
+- Keep functions focused and under 50 lines when possible
+- Prefer composition over inheritance
+
+## Naming Conventions
+
+### Packages
+- Use lowercase, single-word names
+- Avoid underscores or mixed caps
+- Examples: `server`, `client`, `metrics`
+
+### Variables and Functions
+- Use camelCase for unexported names
+- Use PascalCase for exported names
+- Be descriptive but concise
+- Avoid stuttering (e.g., `server.ServerStart` → `server.Start`)
+
+### Constants
+- Use PascalCase for exported constants
+- Group related constants with `const` blocks
+- Use `iota` for enumerations
+
+## Function Design
+
+### Parameters
+- Keep parameter lists short (max 3-4 parameters)
+- Use structs for complex configuration
+- Accept interfaces, return structs
+
+### Returns
+- Return errors as the last value
+- Use named returns only for documentation
+- Return early on errors
+
+### Example
+```go
+func New(host string, port int, metrics *Metrics) *Server {
+    return &Server{
+        host:        host,
+        port:        port,
+        connections: make(map[*websocket.Conn]string),
+        metrics:     metrics,
+    }
+}
+```
+
+## Error Handling
+
+- Always check errors
+- Add context with fmt.Errorf and %w
+- Log errors before returning them (if appropriate)
+- Don't use panic in production code
+
+```go
+if err := conn.WriteMessage(messageType, message); err != nil {
+    return fmt.Errorf("failed to write message to %s: %w", remoteAddr, err)
+}
+```
+
+## Concurrency
+
+### Goroutines
+- Always have a way to stop goroutines
+- Use context for cancellation
+- Handle goroutine panics if necessary
+
+### Channels
+- Close channels from sender, not receiver
+- Use buffered channels for known capacity
+- Don't close channels unnecessarily
+
+### Mutexes
+- Keep critical sections small
+- Use defer for unlock
+- Consider RWMutex for read-heavy code
+
+```go
+s.connMutex.Lock()
+defer s.connMutex.Unlock()
+s.connections[conn] = remoteAddr
+```
+
+## Struct Design
+
+- Embed interfaces, not structs (unless intentional)
+- Put exported fields first
+- Group related fields together
+- Document non-obvious fields
+
+```go
+type Server struct {
+    host        string
+    port        int
+    connections map[*websocket.Conn]string
+    connMutex   sync.RWMutex
+    metrics     *Metrics
+}
+```
+
+## Comments
+
+- Write complete sentences
+- Start with the name of the thing being described
+- Document all exported names
+- Explain WHY, not WHAT (code shows what)
+
+```go
+// NewMetrics creates a new Metrics instance and registers
+// Prometheus collectors with the default registry.
+func NewMetrics() *Metrics { ... }
+```
+
+## Testing
+
+- Name test functions `TestXxx`
+- Use table-driven tests
+- Test error cases
+- Use subtests with `t.Run()`
+
+```go
+func TestServerStart(t *testing.T) {
+    tests := []struct {
+        name string
+        host string
+        port int
+        want error
+    }{
+        {"valid", "127.0.0.1", 3003, nil},
+        {"invalid port", "127.0.0.1", -1, ErrInvalidPort},
+    }
+    
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // test logic
+        })
+    }
+}
+```
+
+## Imports
+
+- Group imports: stdlib, external, internal
+- Use goimports to manage imports automatically
+- Don't import entire packages for one function
+
+```go
+import (
+    "context"
+    "log"
+    "time"
+    _ "time/tzdata"  // Always include for main packages
+    
+    "github.com/gorilla/websocket"
+    "github.com/prometheus/client_golang/prometheus"
+    
+    "github.com/jsirianni/websocket-test/server"
+)
+```
+
+## Performance
+
+- Use buffered I/O for large operations
+- Pool frequently allocated objects
+- Prefer sync.RWMutex for read-heavy workloads
+- Profile before optimizing
+
+## Security
+
+- Validate all inputs
+- Use crypto/rand for random data
+- Don't log sensitive information
+- Set timeouts on network operations

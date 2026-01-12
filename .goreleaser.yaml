@@ -1,0 +1,143 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: server
+    main: ./cmd/server
+    binary: server
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+  - id: client
+    main: ./cmd/client
+    binary: client
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+dockers:
+  - image_templates:
+      - "ghcr.io/jsirianni/websocket-test-server:{{ .Version }}-amd64"
+      - "ghcr.io/jsirianni/websocket-test-server:latest-amd64"
+    dockerfile: Dockerfile.server
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title=websocket-test-server"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
+    extra_files:
+      - server
+    ids:
+      - server
+    goos: linux
+    goarch: amd64
+
+  - image_templates:
+      - "ghcr.io/jsirianni/websocket-test-server:{{ .Version }}-arm64"
+      - "ghcr.io/jsirianni/websocket-test-server:latest-arm64"
+    dockerfile: Dockerfile.server
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title=websocket-test-server"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
+    extra_files:
+      - server
+    ids:
+      - server
+    goos: linux
+    goarch: arm64
+
+  - image_templates:
+      - "ghcr.io/jsirianni/websocket-test-client:{{ .Version }}-amd64"
+      - "ghcr.io/jsirianni/websocket-test-client:latest-amd64"
+    dockerfile: Dockerfile.client
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title=websocket-test-client"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
+    extra_files:
+      - client
+    ids:
+      - client
+    goos: linux
+    goarch: amd64
+
+  - image_templates:
+      - "ghcr.io/jsirianni/websocket-test-client:{{ .Version }}-arm64"
+      - "ghcr.io/jsirianni/websocket-test-client:latest-arm64"
+    dockerfile: Dockerfile.client
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title=websocket-test-client"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/jsirianni/websocket-test"
+    extra_files:
+      - client
+    ids:
+      - client
+    goos: linux
+    goarch: arm64
+
+docker_manifests:
+  - name_template: "ghcr.io/jsirianni/websocket-test-server:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/jsirianni/websocket-test-server:{{ .Version }}-amd64"
+      - "ghcr.io/jsirianni/websocket-test-server:{{ .Version }}-arm64"
+
+  - name_template: "ghcr.io/jsirianni/websocket-test-server:latest"
+    image_templates:
+      - "ghcr.io/jsirianni/websocket-test-server:latest-amd64"
+      - "ghcr.io/jsirianni/websocket-test-server:latest-arm64"
+
+  - name_template: "ghcr.io/jsirianni/websocket-test-client:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/jsirianni/websocket-test-client:{{ .Version }}-amd64"
+      - "ghcr.io/jsirianni/websocket-test-client:{{ .Version }}-arm64"
+
+  - name_template: "ghcr.io/jsirianni/websocket-test-client:latest"
+    image_templates:
+      - "ghcr.io/jsirianni/websocket-test-client:latest-amd64"
+      - "ghcr.io/jsirianni/websocket-test-client:latest-arm64"
+

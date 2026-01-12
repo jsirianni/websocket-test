@@ -1,0 +1,184 @@
+---
+description: Go WebSocket project structure and conventions
+globs: ["**/*.go", "**/Dockerfile*", "**/*.yaml", "**/Makefile"]
+alwaysApply: true
+---
+
+# Go WebSocket Project Standards
+
+## Project Structure
+
+- Main programs MUST be in `cmd/` directory with minimal logic
+  - `cmd/server/main.go` - Server entry point
+  - `cmd/client/main.go` - Client entry point
+- Business logic MUST be in root-level packages:
+  - `server/` for server implementation
+  - `client/` for client implementation
+  - `internal/` for internal utilities (if needed)
+- Keep main.go files under 50 lines - only flags, setup, and startup logic
+
+## Go Code Standards
+
+### Imports
+- ALWAYS include `_ "time/tzdata"` in main packages for timezone data embedding
+- Use blank import for tzdata (not build tags)
+- Group imports: stdlib, external, internal
+
+### Dependencies
+- Use `github.com/gorilla/websocket` for WebSocket functionality
+- Use `github.com/prometheus/client_golang` for metrics
+
+### Configuration
+- Use flag-based configuration (no config files)
+- Provide sensible defaults
+- Make host and port configurable
+- Document all flags in code and documentation
+
+## Server Requirements
+
+### Core Functionality
+- Bind to `0.0.0.0` by default, port `3003` (both configurable)
+- Accept WebSocket connections WITHOUT authentication
+- Log connections with remote socket (IP:port format)
+- Log active connection count every 30 seconds
+- Handle graceful shutdown (SIGINT, SIGTERM)
+
+### Metrics
+- Expose Prometheus metrics on port `9100` (configurable)
+- MUST include `websocket_connections` gauge metric
+- Use separate HTTP server for metrics endpoint
+
+### Code Organization
+- Use mutex for thread-safe connection tracking
+- Use context for cancellation and shutdown
+- Separate concerns: server logic, metrics, connection handling
+
+## Client Requirements
+
+### Core Functionality
+- Default to `localhost:3003` (both configurable)
+- Automatic reconnection with 5-second delay
+- Periodic connection status logging (every 30 seconds)
+- Send ping frames every 15 seconds for keep-alive
+- Run unattended (no user interaction required)
+
+### Behavior
+- Gracefully handle connection loss
+- Log connection attempts, successes, and failures
+- Support long-running operation
+
+## Docker Standards
+
+### Dockerfiles
+- Use `FROM scratch` for both server and client
+- Server: Expose ports 3003 and 9100
+- Client: Use multi-stage build to copy CA certificates from Ubuntu
+  ```dockerfile
+  FROM ubuntu:latest AS certs
+  RUN apt-get update && apt-get install -y ca-certificates
+  
+  FROM scratch
+  COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+  COPY client /client
+  ```
+- Build with CGO_ENABLED=0 for static binaries
+
+## Build System
+
+### GoReleaser
+- Build for: linux, darwin (no windows)
+- Architectures: amd64, arm64
+- NO build tags (use import for tzdata)
+- Create multi-arch Docker images
+- Push to `ghcr.io/jsirianni/websocket-test-server` and `-client`
+- Use semantic versioning tags
+
+### Makefile
+- Targets: build, server, client, test, vet, docker-build, clean
+- Output binaries to `bin/` directory
+- Keep it simple and maintainable
+
+## CI/CD Standards
+
+### GitHub Actions
+- **CI Workflow** (`.github/workflows/ci.yaml`):
+  - Run on push and PR
+  - Build both binaries
+  - Run `go test ./...`
+  - Run `go vet ./...`
+  - Use `go-version-file: go.mod`
+  - NO coverage uploads or other artifacts
+- **Release Workflow** (`.github/workflows/release.yaml`):
+  - Trigger on version tags (`v*`)
+  - Use GoReleaser for builds
+  - Push images to ghcr.io
+  - NO manual CA certificate downloads (multi-stage build handles it)
+
+## Kubernetes Manifests
+
+### Requirements
+- Deployments for server and client in `k8s/` directory
+- Server MUST include a Service (ClusterIP)
+- Use images from `ghcr.io/jsirianni/websocket-test-*:latest`
+- Include resource limits and requests
+- Add liveness/readiness probes for server
+- Client should connect to server via service name
+
+### Naming
+- Prefix resources with `websocket-test-`
+- Use labels: `app: websocket-test-server` or `app: websocket-test-client`
+
+## Documentation Standards
+
+### Structure
+- Brief `README.md` at root with quick examples
+- Comprehensive docs in `docs/` directory:
+  - `quickstart.md` - Getting started guide
+  - `server.md` - Server configuration and usage
+  - `client.md` - Client configuration and usage
+  - `metrics.md` - Prometheus metrics guide
+  - `development.md` - Developer workflow
+  - `architecture.md` - Design and architecture
+
+### Content Requirements
+- Document ALL configuration flags in tables
+- Include concrete examples for all features
+- Explain developer processes (build, test, release)
+- Describe how the system works
+- Keep README under 150 lines
+
+## Code Quality
+
+### Testing
+- Write tests for exported functions
+- Use table-driven tests
+- Test concurrent access patterns
+
+### Error Handling
+- Log errors with context
+- Use fmt.Errorf with %w for error wrapping
+- Don't panic in production code
+
+### Logging
+- Use standard log package with timestamps
+- Include relevant context (IP, port, counts)
+- Log at appropriate levels (info, error)
+
+### Concurrency
+- Protect shared state with mutexes
+- Use RWMutex for read-heavy workloads
+- Always use context for cancellation
+- Launch goroutines with proper cleanup
+
+## Version Control
+
+### .gitignore
+- Ignore `bin/` directory
+- Ignore `dist/` directory
+- Ignore binaries in package directories
+- NO need to ignore ca-certificates.crt (not downloaded anymore)
+
+## License and Legal
+- Use MIT License
+- Include copyright notice
+- Keep license file at root
