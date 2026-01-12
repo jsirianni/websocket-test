@@ -19,13 +19,14 @@ func main() {
 	port := flag.Int("port", 3003, "WebSocket server port")
 	connections := flag.Int("connections", 1, "Number of concurrent connections")
 	useTLS := flag.Bool("tls", false, "Use TLS (wss scheme) for WebSocket connection")
+	logLevel := flag.String("log-level", "info", "Log level (debug, info, warn, error, dpanic, panic, fatal)")
 	flag.Parse()
 
 	if *connections < 1 {
 		*connections = 1
 	}
 
-	log := logger.MustNew()
+	log := logger.MustNewFromString(*logLevel)
 	defer log.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -43,16 +44,28 @@ func main() {
 	// Start multiple client instances if needed
 	var wg sync.WaitGroup
 	errChan := make(chan error, *connections)
+	var connIDCounter int
+	var connIDMutex sync.Mutex
 
-	for i := 0; i < *connections; i++ {
+	// Helper function to start a client connection
+	startClient := func(connID int) {
 		wg.Add(1)
-		go func(connID int) {
+		go func(id int) {
 			defer wg.Done()
 			c := client.New(*host, *port, *useTLS, log)
 			if err := c.Start(ctx); err != nil && err != context.Canceled {
 				errChan <- err
 			}
-		}(i + 1)
+		}(connID)
+	}
+
+	// Start initial connections
+	for i := 0; i < *connections; i++ {
+		connIDMutex.Lock()
+		connIDCounter++
+		id := connIDCounter
+		connIDMutex.Unlock()
+		startClient(id)
 	}
 
 	// Wait for all connections to finish
@@ -62,12 +75,21 @@ func main() {
 		close(done)
 	}()
 
-	// Return first error or wait for context cancellation
-	select {
-	case err := <-errChan:
-		log.Fatal("Client error", zap.Error(err))
-	case <-ctx.Done():
-		<-done
-	case <-done:
+	// Handle errors and spawn replacements until context cancellation
+	for {
+		select {
+		case err := <-errChan:
+			log.Error("Client error, spawning replacement", zap.Error(err))
+			connIDMutex.Lock()
+			connIDCounter++
+			id := connIDCounter
+			connIDMutex.Unlock()
+			startClient(id)
+		case <-ctx.Done():
+			<-done
+			return
+		case <-done:
+			return
+		}
 	}
 }

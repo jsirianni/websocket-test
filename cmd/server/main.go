@@ -19,9 +19,10 @@ func main() {
 	host := flag.String("host", "0.0.0.0", "Host to bind the WebSocket server to")
 	port := flag.Int("port", 3003, "Port for the WebSocket server")
 	metricsPort := flag.Int("metrics-port", 9100, "Port for the Prometheus metrics endpoint")
+	logLevel := flag.String("log-level", "info", "Log level (debug, info, warn, error, dpanic, panic, fatal)")
 	flag.Parse()
 
-	log := logger.MustNew()
+	log := logger.MustNewFromString(*logLevel)
 	defer log.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
